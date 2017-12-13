@@ -11,9 +11,9 @@ pub struct RegistryInstance<'a, T: 'a + web3::Transport> {
 }
 
 impl<'a, T: web3::Transport> RegistryInstance<'a, T> {
-
+	//
     pub fn new(web3: &'a web3::Web3<T>) -> RegistryInstance<'a, T> {
-        const REGISTRY_ADDR: &str = "0xf6423c8a6be00b56ba8d796078382f6db911e928";//"";0x9452b742302e50a28660fd00748fa05e071f1470
+        const REGISTRY_ADDR: &str = "0xf6423c8a6be00b56ba8d796078382f6db911e928";
 
         let instance = Contract::from_json(
             web3.eth(),
@@ -24,13 +24,18 @@ impl<'a, T: web3::Transport> RegistryInstance<'a, T> {
             instance
         }
     }
-
+	
+	//returns true if the domain passed in is in the adchain registry
     pub fn is_in_registry(&self, domain: &str) -> bool {
 
         let domain = String::from(domain).into_token();
 
-        let result: bool = match self.instance.query("isWhitelisted", (domain, ), None,
-            web3::contract::Options::default(), BlockNumber::Latest).wait() {
+        let result: bool = match self.instance
+		    .query("isWhitelisted", 
+			(domain, ), 
+			None,
+            web3::contract::Options::default(), 
+			BlockNumber::Latest).wait() {
             Ok(result) => result,
             Err(err) => panic!("Network was unreachable!"),
         };

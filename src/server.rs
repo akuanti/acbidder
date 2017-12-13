@@ -38,13 +38,15 @@ struct BidResponse {
 	bid: u32
 }
 
-
+//the current bid count being returned
 #[derive(Default)]
 struct BidCounter {
     count: AtomicUsize
 }
 
+//middleware
 impl Fairing for BidCounter {
+    //initialize fairing
     fn info(&self) -> Info {
         Info {
             name: "POST BidCounter",
@@ -52,6 +54,7 @@ impl Fairing for BidCounter {
         }
     }
 	
+	//checks if domain was not white listed
     fn on_response(&self, request: &Request, response: &mut Response) {
         if response.status() == Status::NotFound {
 		    return
@@ -133,6 +136,7 @@ fn acq(domain: String, bid: Json<Bid>, bid_counter: State<BidCounter>) -> Json<B
 	})
 }
 
+//tell client how to use service
 #[get("/")]
 fn instructions() -> String{
     format!("Use json with bid_type, publisher, user_quality.")
@@ -152,6 +156,7 @@ pub fn start_server() -> rocket::Rocket {
 		}))
 }
 
+//initialize the bid response id file for testing purposes
 pub fn initialize_test() {
     let mut f = match OpenOptions::new().write(true).open("RESPONSE_NUMBER.txt") {
 	    Err(err) => File::create("RESPONSE_NUMBER.txt").expect("File problems."),
