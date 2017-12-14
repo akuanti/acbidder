@@ -1,3 +1,7 @@
 
 /target/
 **/*.rs.bk
+BID_REQ.txt
+BID_RESP.txt
+RESPONSE_NUMBER.txt
+Cargo.lock
