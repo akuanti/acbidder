@@ -15,8 +15,9 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use rocket::fairing::{Fairing, Info, Kind, AdHoc};
 
 use rocket::{Request, Response, State};
-use rocket::http::Status;
+use rocket::http::{Status, Method};
 
+use std::error::Error;
 
 use std::io::Cursor;
 
@@ -56,7 +57,7 @@ impl Fairing for BidCounter {
 	
 	//checks if domain was not white listed
     fn on_response(&self, request: &Request, response: &mut Response) {
-        if response.status() == Status::NotFound {
+        if response.status() == Status::NotFound || request.method() == Method::Get {
 		    return
 		}
 		let bid_resp = format!("{:?}",response.body_string().unwrap());
@@ -84,7 +85,7 @@ impl Fairing for BidCounter {
 //writing to the bid request file to keep record of actions
 fn write_to_file_bid_req(bid: &Bid) {
     let mut f = match OpenOptions::new().append(true).open("BID_REQ.txt") {
-    	Err(err) => File::create("BID_REQ.txt").expect("File problems."),
+    	Err(err) => File::create("BID_REQ.txt").expect(err.description()),
     	Ok(f) => f,
     };
 
@@ -97,7 +98,7 @@ fn write_to_file_bid_req(bid: &Bid) {
 //write to bid response file to keep record of responses
 fn write_to_file_bid_resp(bid_resp: &BidResponse) {
     let mut f = match OpenOptions::new().append(true).open("BID_RESP.txt") {
-    	Err(err) => File::create("BID_RESP.txt").expect("File problems."),
+    	Err(err) => File::create("BID_RESP.txt").expect(err.description()),
     	Ok(f) => f,
     };
 
@@ -116,15 +117,16 @@ fn acq(domain: String, bid: Json<Bid>, bid_counter: State<BidCounter>) -> Json<B
     let web3 = web3::Web3::new(http);
     let adchain_registry = super::adchain_registry::RegistryInstance::new(&web3);
     if adchain_registry.is_in_registry(&domain[..]) {
-    	let bid_response_json = Json(BidResponse {
-		    bid_type: format!("BID_RESP"),
-		    bid: (bid_counter.count.load(Ordering::Relaxed) as u32)
-	    });
-		let bid_response_json_recording = Json(BidResponse {
+	    let bid_response_json_recording = Json(BidResponse {
 		    bid_type: format!("BID_RESP"),
 		    bid: (bid_counter.count.load(Ordering::Relaxed) as u32)
 	    });
 		write_to_file_bid_req(&bid.into_inner());
+		
+    	let bid_response_json = Json(BidResponse {
+		    bid_type: format!("BID_RESP"),
+		    bid: (bid_counter.count.load(Ordering::Relaxed) as u32)
+	    });
 		bid_counter.count.fetch_add(1, Ordering::Relaxed);
 		write_to_file_bid_resp(&bid_response_json_recording.into_inner());
 		return bid_response_json;
@@ -159,7 +161,7 @@ pub fn start_server() -> rocket::Rocket {
 //initialize the bid response id file for testing purposes
 pub fn initialize_test() {
     let mut f = match OpenOptions::new().write(true).open("RESPONSE_NUMBER.txt") {
-	    Err(err) => File::create("RESPONSE_NUMBER.txt").expect("File problems."),
+	    Err(err) => File::create("RESPONSE_NUMBER.txt").expect(err.description()),
 		Ok(f) => f,
 	};
 	f.write(b"5").expect("Could not write!");

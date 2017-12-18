@@ -37,7 +37,7 @@ impl<'a, T: web3::Transport> RegistryInstance<'a, T> {
             web3::contract::Options::default(), 
 			BlockNumber::Latest).wait() {
             Ok(result) => result,
-            Err(err) => panic!("Network was unreachable!"),
+            Err(err) => panic!("Network was unreachable! {:?}", err),
         };
         result
     }
