@@ -27,18 +27,18 @@ fn simple_server() {
 	let client = Client::new(start_server()).unwrap();
 
     
-    let mut req = client.post("/acq/nba.com")
+    let mut req = client.post("/acq/fox.com")
         .header(ContentType::JSON)
-        .body(r#"{"bid_type": "BID_REQ", "publisher": "nba.com", "user_quality": 2}"#)
+        .body(r#"{"bid_type": "BID_REQ", "publisher": "fox.com", "user_quality": 2}"#)
         .dispatch();
     
     assert_eq!(req.status(), Status::Ok);
     assert_eq!(req.body_string(),
     	Some(String::from("{\"bid_type\":\"BID_RESP\",\"bid\":5}")));
 		
-	let mut req = client.post("/acq/nba.com")
+	let mut req = client.post("/acq/msn.com")
         .header(ContentType::JSON)
-        .body(r#"{"bid_type": "BID_REQ", "publisher": "nba.com", "user_quality": 1}"#)
+        .body(r#"{"bid_type": "BID_REQ", "publisher": "msn.com", "user_quality": 1}"#)
         .dispatch();
     
     assert_eq!(req.status(), Status::Ok);
